@@ -3,6 +3,7 @@ package bbejeck.support.lucene;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.RAMDirectory;
@@ -23,16 +24,20 @@ public class SampleLuceneIndexBuilder {
     public RAMDirectory buildIndex() throws IOException {
         RAMDirectory ramDirectory = new RAMDirectory();
         Document doc = new Document();
-        Field[] fields = new Field[]{new Field("firstName", "", Field.Store.NO, Field.Index.ANALYZED_NO_NORMS),
-                new Field("lastName", "", Field.Store.NO, Field.Index.ANALYZED_NO_NORMS),
-                new Field("address", "", Field.Store.NO, Field.Index.ANALYZED_NO_NORMS),
-                new Field("email", "", Field.Store.NO, Field.Index.ANALYZED_NO_NORMS),
-                new Field("id", "", Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS)};
+
+        Field[] fields = new Field[]{
+                new TextField("firstName", "", Field.Store.NO),
+                new TextField("lastName", "", Field.Store.NO),
+                new TextField("address", "", Field.Store.NO),
+                new TextField("email", "", Field.Store.NO),
+                new TextField("id", "", Field.Store.YES)
+        };
+
         addFieldsToDocument(doc, fields);
 
         BufferedReader reader = new BufferedReader(new FileReader(namesFile));
 
-        IndexWriter indexWriter = new IndexWriter(ramDirectory, new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35)));
+        IndexWriter indexWriter = new IndexWriter(ramDirectory, new IndexWriterConfig(Version.LUCENE_48, new StandardAnalyzer(Version.LUCENE_48)));
 
         String line;
         while ((line = reader.readLine()) != null) {
@@ -51,7 +56,7 @@ public class SampleLuceneIndexBuilder {
     private  void setFieldData(String[] data, Field[] fields) {
         int index = 0;
         for (Field field : fields) {
-            field.setValue(data[index++]);
+            field.setStringValue(data[index++]);
         }
     }
 
