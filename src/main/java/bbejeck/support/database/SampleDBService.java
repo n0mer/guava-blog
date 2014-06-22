@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,7 +24,7 @@ import java.util.concurrent.Callable;
 public class SampleDBService extends BaseSample {
 
     private JdbcConnectionPool connectionPool;
-    private String query = "Select first_name,last_name,address,email from person where id in(";
+    private static final String query = "Select first_name,last_name,address,email from person where id in(";
     private static final String FIRST_NAME = "first_name";
     private static final String LAST_NAME = "last_name";
     private static final String ADDRESS = "address";
@@ -37,11 +36,9 @@ public class SampleDBService extends BaseSample {
 
     public List<Map<String, String>> getPersonDataById(List<String> rawIds) {
         try {
-            StringBuilder queryBuilder = new StringBuilder(query);
-            queryBuilder.append(buildInList(rawIds)).append(')');
             Connection connection = connectionPool.getConnection();
             Statement statement = connection.createStatement();
-            ResultSet resultSet = executeQuery(statement, queryBuilder.toString());
+            ResultSet resultSet = executeQuery(statement, query + buildInList(rawIds) + ')');
             List<Map<String, String>> results = extractResults(resultSet);
             close(resultSet, statement, connection);
 
@@ -57,27 +54,19 @@ public class SampleDBService extends BaseSample {
         connection.close();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public ListenableFuture<List<Map<String, String>>> getPersonDataByIdAsync(final List<String> ids) {
-        return executorService.submit(new Callable<List<Map<String, String>>>() {
-            @Override
-            public List<Map<String, String>> call() throws Exception {
-                return getPersonDataById(ids);
-            }
-        });
+        return executorService.submit(() -> getPersonDataById(ids));
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public ListenableFuture<List<Person>> getPersonsByIdAsync(final List<String> ids) {
-        return executorService.submit(new Callable<List<Person>>() {
-            @Override
-            public List<Person> call() throws Exception {
-                return getPersonsById(ids);
-            }
-        });
+        return executorService.submit(() -> getPersonsById(ids));
     }
 
     public List<Person> getPersonsById(List<String> ids) {
         List<Map<String, String>> personData = getPersonDataById(ids);
-        List<Person> people = new ArrayList<Person>();
+        List<Person> people = new ArrayList<>();
         for (Map<String, String> data : personData) {
             people.add(new Person(data));
         }
@@ -85,10 +74,10 @@ public class SampleDBService extends BaseSample {
     }
 
     private List<Map<String, String>> extractResults(ResultSet resultSet) {
-        List<Map<String, String>> allResults = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> allResults = new ArrayList<>();
         try {
             while (resultSet.next()) {
-                Map<String, String> rowResults = new HashMap<String, String>();
+                Map<String, String> rowResults = new HashMap<>();
                 rowResults.put(FIRST_NAME, resultSet.getString(FIRST_NAME));
                 rowResults.put(LAST_NAME, resultSet.getString(LAST_NAME));
                 rowResults.put(ADDRESS, resultSet.getString(ADDRESS));
@@ -106,12 +95,7 @@ public class SampleDBService extends BaseSample {
     }
 
     private String buildInList(List<String> rawIds) {
-        StringBuilder builder = new StringBuilder();
-        for (String rawId : rawIds) {
-            builder.append(rawId).append(',');
-        }
-        builder.setLength(builder.length() - 1);
-        return builder.toString();
+        return String.join(",", rawIds);
     }
 
 }
