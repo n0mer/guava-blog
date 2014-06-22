@@ -25,6 +25,7 @@ public class MonitorExample {
         }
     };
 
+    @SuppressWarnings("UnusedDeclaration")
     public void demoTryEnterIf() throws InterruptedException {
         if (monitor.tryEnterIf(conditionGuard)) {
             try {
@@ -38,6 +39,7 @@ public class MonitorExample {
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void demoEnterIf() throws InterruptedException {
         if (monitor.enterIf(conditionGuard)) {
             try {
@@ -54,6 +56,7 @@ public class MonitorExample {
 
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void demoEnterWhen() throws InterruptedException {
         monitor.enterWhen(conditionGuard);
         try {
@@ -70,6 +73,7 @@ public class MonitorExample {
         Thread.sleep(250);
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public int getStopTaskCount() {
         return stopTaskCount;
     }
