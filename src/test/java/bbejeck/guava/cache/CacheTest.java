@@ -3,13 +3,21 @@ package bbejeck.guava.cache;
 import bbejeck.guava.futures.SearchingTestBase;
 import bbejeck.support.model.Person;
 import com.google.common.base.Function;
-import com.google.common.cache.*;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalCause;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.junit.Test;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -21,13 +29,13 @@ import static org.junit.Assert.assertThat;
 
 public class CacheTest extends SearchingTestBase {
 
-
     @Test
     public void testCacheWithFastRemovalsAfterWrite() throws Exception {
 
         PersonListRemovalListener removalListener = new PersonListRemovalListener();
 
-        LoadingCache<String, List<Person>> cache = CacheBuilder.newBuilder().expireAfterWrite(500, TimeUnit.MILLISECONDS)
+        LoadingCache<String, List<Person>> cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(500, TimeUnit.MILLISECONDS)
                 .removalListener(removalListener)
                 .recordStats()
                 .build(getCacheLoader());
@@ -35,7 +43,7 @@ public class CacheTest extends SearchingTestBase {
         String queryKey = "firstName:bob";
         List<Person> personList = cache.get(queryKey);
         List<Person> personListII = cache.get(queryKey);
-        Thread.sleep(500);
+        Thread.sleep(501);
         List<Person> personListIII = cache.get(queryKey);
         assertThat(personList == personListII, is(true));
         assertThat(personList == personListIII, is(false));
@@ -52,7 +60,9 @@ public class CacheTest extends SearchingTestBase {
 
     @Test
     public void testCacheLoadedAfterFirstRequestThenCached() throws Exception {
-        LoadingCache<String, List<Person>> cache = CacheBuilder.newBuilder().recordStats().build(CacheLoader.from(getFunction()));
+        LoadingCache<String, List<Person>> cache = CacheBuilder.newBuilder()
+                .recordStats()
+                .build(CacheLoader.from(getFunction()));
         String queryKey = "lastName:smith";
         List<Person> personList = null;
         for (int i = 0; i < 100; i++) {
@@ -63,6 +73,7 @@ public class CacheTest extends SearchingTestBase {
         assertThat(stats.loadCount(), is(1l));
         assertThat(stats.missCount(), is(1l));
         assertThat(stats.requestCount(), is(100l));
+        assertNotNull(personList);
         assertThat(personList.size(), is(620));
         for (Person person : personList) {
             assertThat(person.lastName, is("Smith"));
@@ -87,13 +98,12 @@ public class CacheTest extends SearchingTestBase {
         assertThat(removalListener.getRemovalNotification().getCause(),is(RemovalCause.SIZE));
     }
 
-
     private class PersonListRemovalListener implements RemovalListener<String, List<Person>> {
 
         private RemovalNotification<String, List<Person>> removalNotification;
 
         @Override
-        public void onRemoval(RemovalNotification<String, List<Person>> removalNotification) {
+        public void onRemoval(@Nonnull RemovalNotification<String, List<Person>> removalNotification) {
             this.removalNotification = removalNotification;
         }
 
@@ -105,7 +115,7 @@ public class CacheTest extends SearchingTestBase {
     private CacheLoader<String, List<Person>> getCacheLoader() {
         return new CacheLoader<String, List<Person>>() {
             @Override
-            public List<Person> load(String key) throws Exception {
+            public List<Person> load(@Nonnull String key) throws Exception {
                 List<String> ids = luceneSearcher.search(key);
                 return dbService.getPersonsById(ids);
             }
@@ -113,17 +123,13 @@ public class CacheTest extends SearchingTestBase {
     }
 
     private Function<String, List<Person>> getFunction() {
-        return new Function<String, List<Person>>() {
-            @Override
-            public List<Person> apply(String searchKey) {
-                try {
-                    List<String> ids = luceneSearcher.search(searchKey);
-                    return dbService.getPersonsById(ids);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+        return (searchKey) -> {
+            try {
+                List<String> ids = luceneSearcher.search(searchKey);
+                return dbService.getPersonsById(ids);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         };
     }
-
 }
