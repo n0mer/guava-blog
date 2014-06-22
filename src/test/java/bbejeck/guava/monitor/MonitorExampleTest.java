@@ -20,7 +20,7 @@ public class MonitorExampleTest {
 
     private MonitorExample monitorExample;
     private ExecutorService executorService;
-    private int numberThreads = 10;
+    private final int numberThreads = 10;
     private CountDownLatch startSignal;
     private CountDownLatch doneSignal;
 
@@ -113,44 +113,8 @@ public class MonitorExampleTest {
         assertThat(completedCount, is(expectedCompletedCount));
     }
 
-    /*
-      Artificially setting the guard to false after 3 threads complete to demonstrate that
-      the remaining 7 threads will wait until the guard condition returns true again and will
-      enter the monitor.
-     */
-    @Test
-    public void testDemoEnterWhenAllTasksCompleteEvenWhenConditionChanges() throws Exception {
-        monitorExample.setCondition(true);
-        monitorExample.setStopTaskCount(3);
-        setUpThreadsForTestingMethod("demoEnterWhen");
-        startAllThreadsForTest();
-
-        //verifying that only 3 threads have initially worked, re-set the guard to true
-        FutureTask<Integer> checkInitialTasksCompleted = new FutureTask<Integer>(
-                new Callable<Integer>() {
-                    public Integer call() {
-                        int initialCompletedTasks = monitorExample.getTaskDoneCounter();
-                        monitorExample.setCondition(true);
-                        return initialCompletedTasks;
-
-                    }
-                });
-
-        new Thread(checkInitialTasksCompleted).start();
-
-        int expectedCompletedCount = 3;
-        int completedCount = checkInitialTasksCompleted.get();
-        assertThat(completedCount, is(expectedCompletedCount));
-
-        waitForTestThreadsToFinish();
-        assertThat(completedCount, is(expectedCompletedCount));
-        expectedCompletedCount = 10;
-        completedCount = monitorExample.getTaskDoneCounter();
-        assertThat(completedCount, is(expectedCompletedCount));
-    }
-
     private void waitForTestThreadsToFinish() throws InterruptedException {
-        doneSignal.await(1000l, TimeUnit.MILLISECONDS);
+        doneSignal.await(1000L, TimeUnit.MILLISECONDS);
     }
 
     private void startAllThreadsForTest() {
@@ -161,24 +125,19 @@ public class MonitorExampleTest {
         return monitorExample.getClass().getDeclaredMethod(methodName);
     }
 
-
     private void setUpThreadsForTestingMethod(String methodName) throws Exception {
         final Method testMethod = getMethodUnderTest(methodName);
         for (int i = 0; i < numberThreads; i++) {
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        startSignal.await();
-                        testMethod.invoke(monitorExample);
-                    } catch (Exception e) {
-                        //Don't care
-                    } finally {
-                        doneSignal.countDown();
-                    }
+            executorService.execute(() -> {
+                try {
+                    startSignal.await();
+                    testMethod.invoke(monitorExample);
+                } catch (Exception e) {
+                    //Don't care
+                } finally {
+                    doneSignal.countDown();
                 }
             });
         }
     }
-
 }
