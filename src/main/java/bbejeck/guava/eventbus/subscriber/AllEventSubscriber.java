@@ -15,7 +15,6 @@ public class AllEventSubscriber extends EventSubscriber<Object> {
         super(eventBus);
     }
 
-    @Override
     @Subscribe
     public void handleEvent(Object event) {
         events.add(event);

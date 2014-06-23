@@ -15,7 +15,7 @@ import com.google.common.eventbus.EventBus;
 
 public class EventPublisher {
 
-    EventBus eventBus;
+    private EventBus eventBus;
 
     public EventPublisher(EventBus eventBus) {
         this.eventBus = eventBus;

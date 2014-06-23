@@ -14,13 +14,11 @@ import java.util.List;
 
 public abstract class EventSubscriber<T> {
 
-    List<T> events = new ArrayList<T>();
+    List<T> events = new ArrayList<>();
 
     public EventSubscriber(EventBus eventBus) {
         eventBus.register(this);
     }
-
-    public abstract void handleEvent(T event);
 
     public List<T> getHandledEvents() {
         return events;

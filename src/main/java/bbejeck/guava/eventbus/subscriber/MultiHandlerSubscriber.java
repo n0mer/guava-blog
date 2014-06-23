@@ -17,9 +17,9 @@ import java.util.List;
  */
 public class MultiHandlerSubscriber {
 
-    private List<CashPurchaseEvent> cashEvents = new ArrayList<CashPurchaseEvent>();
-    private List<CreditPurchaseEvent> creditEvents = new ArrayList<CreditPurchaseEvent>();
-    private List<SimpleEvent> simpleEvents = new ArrayList<SimpleEvent>();
+    private List<CashPurchaseEvent> cashEvents = new ArrayList<>();
+    private List<CreditPurchaseEvent> creditEvents = new ArrayList<>();
+    private List<SimpleEvent> simpleEvents = new ArrayList<>();
 
     public MultiHandlerSubscriber(EventBus eventBus) {
         eventBus.register(this);
