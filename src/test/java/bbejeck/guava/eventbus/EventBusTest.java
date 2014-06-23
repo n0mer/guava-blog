@@ -3,7 +3,14 @@ package bbejeck.guava.eventbus;
 import bbejeck.guava.eventbus.events.CashPurchaseEvent;
 import bbejeck.guava.eventbus.events.CreditPurchaseEvent;
 import bbejeck.guava.eventbus.events.NoSubscriberEvent;
-import bbejeck.guava.eventbus.subscriber.*;
+import bbejeck.guava.eventbus.subscriber.AllEventSubscriber;
+import bbejeck.guava.eventbus.subscriber.CashPurchaseEventSubscriber;
+import bbejeck.guava.eventbus.subscriber.CreditPurchaseEventSubscriber;
+import bbejeck.guava.eventbus.subscriber.InvalidSubscriberMultipleParameter;
+import bbejeck.guava.eventbus.subscriber.InvalidSubscriberNoParameters;
+import bbejeck.guava.eventbus.subscriber.LongProcessSubscriber;
+import bbejeck.guava.eventbus.subscriber.MultiHandlerSubscriber;
+import bbejeck.guava.eventbus.subscriber.PurchaseEventSubscriber;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.DeadEvent;
 import com.google.common.eventbus.EventBus;
@@ -33,12 +40,12 @@ public class EventBusTest {
     private PurchaseEventSubscriber purchaseEventSubscriber;
     private EventBus eventBus;
     private AsyncEventBus asyncEventBus;
+    @SuppressWarnings("UnusedDeclaration")
     private LongProcessSubscriber longProcessSubscriber;
     private DeadEventSubscriber deadEventSubscriber;
-    private AllEventSubscriber allEventSubscriber;
     private MultiHandlerSubscriber multiHandlerSubscriber;
     private CountDownLatch doneSignal;
-    private int numberLongEvents = 10;
+    private final int numberLongEvents = 10;
 
 
     @Before
@@ -144,7 +151,7 @@ public class EventBusTest {
 
     @Test
     public void testHandleAllEvents() {
-        allEventSubscriber = new AllEventSubscriber(eventBus);
+        AllEventSubscriber allEventSubscriber = new AllEventSubscriber(eventBus);
         generateAllPurchaseEvents();
         generateSimpleEvent();
         assertThat(allEventSubscriber.getHandledEvents().size(), is(3));
@@ -162,13 +169,13 @@ public class EventBusTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testMultipleParametersInHandler() {
-        InvalidSubscriberMultipleParameter invalidSubscriber = new InvalidSubscriberMultipleParameter(eventBus);
+        new InvalidSubscriberMultipleParameter(eventBus);
         generateCreditPurchaseEvent();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNoParametersInHandler() {
-        InvalidSubscriberNoParameters invalidSubscriber = new InvalidSubscriberNoParameters(eventBus);
+        new InvalidSubscriberNoParameters(eventBus);
         generateCreditPurchaseEvent();
     }
 
@@ -190,14 +197,12 @@ public class EventBusTest {
         eventPublisher.createCashPurchaseEvent("Jeep Wrangler", 25000l);
     }
 
-
     private class DeadEventSubscriber {
-        List<DeadEvent> deadEvents = new ArrayList<DeadEvent>();
+        List<DeadEvent> deadEvents = new ArrayList<>();
 
         @Subscribe
         public void handleDeadEvent(DeadEvent deadEvent) {
             deadEvents.add(deadEvent);
         }
-
     }
 }

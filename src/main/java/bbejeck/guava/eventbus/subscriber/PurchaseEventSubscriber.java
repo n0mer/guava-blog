@@ -17,7 +17,6 @@ public class PurchaseEventSubscriber extends EventSubscriber<PurchaseEvent> {
         super(eventBus);
     }
 
-    @Override
     @Subscribe
     public void handleEvent(PurchaseEvent event) {
         events.add(event);

@@ -17,7 +17,6 @@ public class CreditPurchaseEventSubscriber extends EventSubscriber<CreditPurchas
         super(eventBus);
     }
 
-    @Override
     @Subscribe
     public void handleEvent(CreditPurchaseEvent event) {
         events.add(event);
