@@ -6,6 +6,7 @@ import com.google.common.hash.PrimitiveSink;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.annotation.Nonnull;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +32,8 @@ public class BloomFilterTest {
     public void setUp() {
         numBits = 128;
         random = new Random();
-        stored = new ArrayList<BigInteger>();
-        notStored = new ArrayList<BigInteger>();
+        stored = new ArrayList<>();
+        notStored = new ArrayList<>();
         loadBigIntList(stored, 1000);
         loadBigIntList(notStored, 100);
     }
@@ -88,7 +89,7 @@ public class BloomFilterTest {
 
     private class BigIntegerFunnel implements Funnel<BigInteger> {
         @Override
-        public void funnel(BigInteger from, PrimitiveSink into) {
+        public void funnel(@Nonnull BigInteger from, @Nonnull PrimitiveSink into) {
             into.putBytes(from.toByteArray());
         }
     }
